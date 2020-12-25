@@ -98,8 +98,6 @@ def get_word_score(word, n):
     returns: int >= 0
     """
     worddlen = len(word)
-    if '*' in word:
-        word = word.replace('*', '')
     score_for_letters = 0
     for j in word:
         score_for_letters += SCRABBLE_LETTER_VALUES.get(j.lower(), 0)
@@ -123,7 +121,8 @@ def display_hand(hand):
 
     hand: dictionary (string -> int)
     """
-    print('\nCurrent Hand:', end=' ')
+    print()
+    print('Current Hand:', end=' ')
     for letter in hand.keys():
         for j in range(hand[letter]):
             print(letter, end=' ')  # print all on the same line
@@ -149,14 +148,12 @@ def deal_hand(n):
     returns: dictionary (string -> int)
     """
 
-    hand = {}
+    hand = {'*': 1}
     num_vowels = int(math.ceil(n / 3))
 
-    for i in range(num_vowels):
+    for i in range(num_vowels - 1):
         x = random.choice(VOWELS)
         hand[x] = hand.get(x, 0) + 1
-
-    hand['*'] = 1
 
     for i in range(num_vowels, n):
         x = random.choice(CONSONANTS)
@@ -215,7 +212,7 @@ def is_valid_word(word, hand, word_list):
     up_word = get_frequency_dict(word)
 
     for i in up_word.keys():
-        if up_word.get(i) > hand.get(i, 0):
+        if up_word[i] > hand.get(i, 0):
             return False
         if i == '*':
             possible_words = []
