@@ -10,6 +10,7 @@
 import math
 import random
 import string
+import re
 
 VOWELS = 'aeiou'
 CONSONANTS = 'bcdfghjklmnpqrstvwxyz'
@@ -189,6 +190,9 @@ def update_hand(hand, word):
     up_word = get_frequency_dict(word)
     for i in up_word.keys():
         hand[i] = hand.get(i, 0) - up_word[i]
+        if hand[i] <= 0:
+            del hand[i]
+
 
     return hand
 
@@ -214,16 +218,13 @@ def is_valid_word(word, hand, word_list):
     for i in up_word.keys():
         if up_word[i] > hand.get(i, 0):
             return False
-        if i == '*':
-            possible_words = []
-            for j in VOWELS:
-                possible_words.append(word.replace('*', j))
-            if set(possible_words) & set(word_list) == set():
-                return False
-        if word not in word_list and "*" not in up_word.keys():
-            return False
 
-    return True
+    pattern = word.replace('*', f'{[VOWELS]}')
+    for j in word_list:
+        if re.fullmatch(pattern, j):
+            return True
+
+    return False
 
 
 # in proces
@@ -283,7 +284,7 @@ def play_hand(hand, word_list):
         word = input('Enter word, or “!!” to indicate that you are finished:').lower()
         # If the input is two exclamation points:
         if '!!' in word:
-            print(f'Total score for this hand:{total_score} points\n')
+
             # End the game (break out of the loop)
             break
 
@@ -303,8 +304,9 @@ def play_hand(hand, word_list):
         hand = update_hand(hand, word)
 
         # Game is over (user entered '!!' or ran out of letters), so tell user the total score
-        if calculate_handlen(hand) == 0:
-            print(f'\nYou ran out of letters.\nTotal score for this hand: {total_score} points')
+    if calculate_handlen(hand) == 0:
+        print(f'You ran out of letters.')
+    print(f'Total score for this hand: {total_score} points')
 
     # Return the total score as result of function
     return total_score
@@ -400,8 +402,8 @@ def play_game(word_list):
     number_of_hands = get_total_number_of_hands()
 
     total_score = 0
-    n_substitution = 0
-    n_replay = 0
+    n_substitution = True
+    n_replay = True
     i_hand = 0
 
     while i_hand < number_of_hands:
@@ -410,22 +412,22 @@ def play_game(word_list):
 
         display_hand(curr_hand)
         # * ask the user if they want to substitute
-        if n_substitution == 0:
+        if n_substitution:
             substitute_choice = input('Would you like to substitute a letter? ')
             if substitute_choice == 'yes':
                 letter_choice = input('Please, type letter for replacement: ')
                 curr_hand = substitute_hand(curr_hand, letter_choice)
-                n_substitution += 1
+                n_substitution = False
 
         curr_score = play_hand(curr_hand, word_list)
 
         # * ask the user if they would like to replay the hand
-        if n_replay == 0:
+        if n_replay:
             replay_choice = input('Would you like to replay the hand? ')
             if replay_choice == 'yes':
                 replay_score = play_hand(init_hand, word_list)
                 curr_score = max(curr_score, replay_score)
-                n_replay += 1
+                n_replay = False
 
         # * Accumulates the score for each hand
         total_score += curr_score
